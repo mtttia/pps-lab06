@@ -4,11 +4,12 @@ package it.unibo.pps.ex1
 enum List[A]:
   case ::(h: A, t: List[A])
   case Nil()
+
   def ::(h: A): List[A] = List.::(h, this)
 
   def head: Option[A] = this match
-    case h :: t => Some(h)  // pattern for scala.Option
-    case _ => None          // pattern for scala.Option
+    case h :: t => Some(h) // pattern for scala.Option
+    case _ => None // pattern for scala.Option
 
   def tail: Option[List[A]] = this match
     case h :: t => Some(t)
@@ -44,41 +45,48 @@ enum List[A]:
   def reduce(op: (A, A) => A): A = this match
     case Nil() => throw new IllegalStateException()
     case h :: t => t.foldLeft(h)(op)
-  
+
   // Exercise: implement the following methods
   def zipWithValue[B](value: B): List[(A, B)] =
     def _zipWithValueRec(value: B, list: List[A]): List[(A, B)] = list match {
       case curr :: rest => (curr, value) :: _zipWithValueRec(value, rest)
       case Nil() => Nil()
     }
+
     _zipWithValueRec(value, this)
+
   def zipWithValueWithFold[B](value: B): List[(A, B)] = foldRight(Nil())((curr, acc) => (curr, value) :: acc)
 
-  def length(): Int = foldLeft[Int](0)((acc, _) => acc+1)
-  def indices(): List[Int] = foldLeft[(List[Int], Int)](Nil(), this.length()-1){
-    case ((list, index), _) => (index :: list, index-1)
+  def length(): Int = foldLeft[Int](0)((acc, _) => acc + 1)
+
+  def indices(): List[Int] = foldLeft[(List[Int], Int)](Nil(), this.length() - 1) {
+    case ((list, index), _) => (index :: list, index - 1)
   }._1
 
   def zipWithIndex: List[(A, Int)] =
     def _rec(list: List[A], index: Int): List[(A, Int)] = list match {
-      case curr :: rest => (curr, index) :: _rec(rest, index+1)
+      case curr :: rest => (curr, index) :: _rec(rest, index + 1)
       case Nil() => Nil()
     }
+
     _rec(this, 0)
-  def zipWithIndexWithFold: List[(A, Int)] = foldRight[(List[(A, Int)], Int)](Nil(), this.length()-1){
-    case (curr, (list, index)) => ((curr, index)::list, index-1)
+
+  def zipWithIndexWithFold: List[(A, Int)] = foldRight[(List[(A, Int)], Int)](Nil(), this.length() - 1) {
+    case (curr, (list, index)) => ((curr, index) :: list, index - 1)
   }._1
+
   def partition(predicate: A => Boolean): (List[A], List[A]) = {
     def _rec(list: List[A]): (List[A], List[A]) = list match {
-      case curr :: rest => if(predicate(curr)){
+      case curr :: rest => if (predicate(curr)) {
         val (l1, l2) = _rec(rest)
         (curr :: l1, l2)
-      }else{
+      } else {
         val (l1, l2) = _rec(rest)
         (l1, curr :: l2)
       }
       case Nil() => (Nil(), Nil())
     }
+
     _rec(this)
   }
 
@@ -89,76 +97,80 @@ enum List[A]:
       (l1, curr :: l2)
     }
   }
+
   def span(predicate: A => Boolean): (List[A], List[A]) =
-    def _rec(list:List[A], failure: Boolean): (List[A], List[A]) = list match {
-      case curr :: rest => if(!failure && predicate(curr)) {
+    def _rec(list: List[A], failure: Boolean): (List[A], List[A]) = list match {
+      case curr :: rest => if (!failure && predicate(curr)) {
         val (l1, l2) = _rec(rest, false)
         (curr :: l1, l2)
       }
-      else{
+      else {
         val (l1, l2) = _rec(rest, true)
         (l1, curr :: l2)
       }
       case Nil() => (Nil(), Nil())
     }
+
     _rec(this, false)
 
-  def spanWithFold(predicate: A => Boolean): (List[A], List[A]) = foldLeft[((List[A], List[A]), Boolean)]((Nil(), Nil()), false){
-    case (((l1, l2), failure), curr) => if(!failure && predicate(curr)){
+  def spanWithFold(predicate: A => Boolean): (List[A], List[A]) = foldLeft[((List[A], List[A]), Boolean)]((Nil(), Nil()), false) {
+    case (((l1, l2), failure), curr) => if (!failure && predicate(curr)) {
       ((curr :: l1, l2), false)
-    }else{
-      ((l1,curr :: l2), true)
+    } else {
+      ((l1, curr :: l2), true)
     }
   }._1
 
   def takeRight(n: Int): List[A] = {
-    def _rec(list:List[A], nLast:Int):List[A] = list match {
-      case curr :: rest => if(nLast == n){
+    def _rec(list: List[A], nLast: Int): List[A] = list match {
+      case curr :: rest => if (nLast == n) {
         (curr :: rest)
-      }else{
-        _rec(rest, nLast-1)
+      } else {
+        _rec(rest, nLast - 1)
       }
       case Nil() => Nil()
     }
+
     _rec(this, this.length())
   }
 
-  def takeRightWithFold(n: Int): List[A] = foldRight[(List[A], Int)](Nil(), 1){
-    case (curr, (l, nLast)) => if(nLast <= n){
-      ((curr :: l), nLast+1)
+  def takeRightWithFold(n: Int): List[A] = foldRight[(List[A], Int)](Nil(), 1) {
+    case (curr, (l, nLast)) => if (nLast <= n) {
+      ((curr :: l), nLast + 1)
     }
-    else{
-      ((l), nLast+1)
+    else {
+      ((l), nLast + 1)
     }
   }._1
 
   def collect(predicate: PartialFunction[A, A]): List[A] = this.filter((a) => predicate.isDefinedAt(a)).map((a) => predicate(a))
 
   def collectWithRec(predicate: PartialFunction[A, A]): List[A] = {
-    def _rec(list:List[A]): List[A] = list match {
-      case curr :: rest => if(predicate.isDefinedAt(curr)){
+    def _rec(list: List[A]): List[A] = list match {
+      case curr :: rest => if (predicate.isDefinedAt(curr)) {
         predicate(curr) :: _rec(rest)
       }
-      else{
+      else {
         _rec(rest)
       }
       case Nil() => Nil()
     }
+
     _rec(this)
   }
 
 // Factories
 object List:
 
-  def unzip[A, B](list:List[(A, B)]): (List[A], List[B]) = list match {
+  def unzip[A, B](list: List[(A, B)]): (List[A], List[B]) = list match {
     case (left, right) :: rest =>
       val (leftList, rightList) = unzip(rest)
       (left :: leftList, right :: rightList)
     case Nil() => (Nil(), Nil())
   }
 
-  def unzipWithFold[A, B](list:List[(A, B)]): (List[A], List[B]) =
-    list.foldRight(Nil(), Nil()){
+  def unzipWithFold[A, B](list: List[(A, B)]): (List[A], List[B]) =
+    list.foldRight(Nil(), Nil()) {
       case ((left, right), (leftList, rightList)) => (left :: leftList, right :: rightList)
     }
 
@@ -171,10 +183,12 @@ object List:
     if n == 0 then Nil() else elem :: of(elem, n - 1)
 
 object Test extends App:
+
   import List.*
+
   val reference = List(1, 2, 3, 4)
-  println(unzip(List((1,2),(4,3))))
-  println(unzipWithFold(List((1,2),(4,3))))
+  println(unzip(List((1, 2), (4, 3))))
+  println(unzipWithFold(List((1, 2), (4, 3))))
   println(reference.zipWithValue(10)) // List((1, 10), (2, 10), (3, 10), (4, 10))
   println(reference.zipWithValueWithFold(10)) // List((1, 10), (2, 10), (3, 10), (4, 10))
   println(reference.length()) // 4
