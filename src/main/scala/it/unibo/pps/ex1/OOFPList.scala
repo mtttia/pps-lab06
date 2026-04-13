@@ -113,13 +113,21 @@ enum List[A]:
 
     _rec(this, false)
 
-  def spanWithFold(predicate: A => Boolean): (List[A], List[A]) = foldLeft[((List[A], List[A]), Boolean)]((Nil(), Nil()), false) {
-    case (((l1, l2), failure), curr) => if (!failure && predicate(curr)) {
-      ((curr :: l1, l2), false)
-    } else {
-      ((l1, curr :: l2), true)
-    }
-  }._1
+  def spanWithFold(predicate: A => Boolean): (List[A], List[A]) =
+    val firstL2Index = foldLeft(0, false) {
+      case ((index, failure), curr) => if (!failure && predicate(curr)) {
+        (index + 1, false)
+      } else {
+        (index, true)
+      }
+    }._1
+    foldRight[((List[A], List[A]), Int)]((Nil(), Nil()), this.length() - 1) {
+      case (curr, ((l1, l2), index)) => if (index < firstL2Index) {
+        ((curr :: l1, l2), index - 1)
+      } else {
+        ((l1, curr :: l2), index - 1)
+      }
+    }._1
 
   def takeRight(n: Int): List[A] = {
     def _rec(list: List[A], nLast: Int): List[A] = list match {
