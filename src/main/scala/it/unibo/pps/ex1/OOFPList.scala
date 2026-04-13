@@ -45,7 +45,7 @@ enum List[A]:
     case h :: t => t.foldLeft(h)(op)
   
   // Exercise: implement the following methods
-  def zipWithValue[B](value: B): List[(A, B)] = ???
+  def zipWithValue[B](value: B): List[(A, B)] = foldRight(Nil())((curr, acc) => (curr, value) :: acc)
   def length(): Int = ???
   def indices(): List[A] = ???
   def zipWithIndex: List[(A, Int)] = ???
@@ -55,6 +55,18 @@ enum List[A]:
   def collect(predicate: PartialFunction[A, A]): List[A] = ???
 // Factories
 object List:
+
+  def unzip[A, B](list:List[(A, B)]): (List[A], List[B]) = list match {
+    case (left, right) :: rest =>
+      val (leftList, rightList) = unzip(rest)
+      (left :: leftList, right :: rightList)
+    case Nil() => (Nil(), Nil())
+  }
+
+  def unzipWithFold[A, B](list:List[(A, B)]): (List[A], List[B]) =
+    list.foldRight(Nil(), Nil()){
+      case ((left, right), (leftList, rightList)) => (left :: leftList, right :: rightList)
+    }
 
   def apply[A](elems: A*): List[A] =
     var list: List[A] = Nil()
@@ -67,6 +79,8 @@ object List:
 object Test extends App:
   import List.*
   val reference = List(1, 2, 3, 4)
+  println(unzip(List((1,2),(4,3))))
+  println(unzipWithFold(List((1,2),(4,3))))
   println(reference.zipWithValue(10)) // List((1, 10), (2, 10), (3, 10), (4, 10))
   println(reference.length()) // 4
   println(reference.indices()) // List(0, 1, 2, 3)
